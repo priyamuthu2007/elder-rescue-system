@@ -1,0 +1,7 @@
+backend/node_modules/
+backend/elder_rescue.db
+backend/elder_rescue.db-*
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/server.log
+.env
