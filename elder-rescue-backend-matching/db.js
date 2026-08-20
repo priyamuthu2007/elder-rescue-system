@@ -47,4 +47,18 @@ db.exec(`
 
 console.log('Database ready: organizations + reports tables exist.');
 
+// ---- status_logs table ----
+// Audit trail of every status change made to a report
+db.exec(`
+  CREATE TABLE IF NOT EXISTS status_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id INTEGER NOT NULL,
+    old_status TEXT,
+    new_status TEXT NOT NULL,
+    note TEXT,
+    changed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (report_id) REFERENCES reports(id)
+  );
+`);
+
 module.exports = db;

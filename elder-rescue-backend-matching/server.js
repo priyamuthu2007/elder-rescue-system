@@ -11,7 +11,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
-const { findNearbyOrganizations } = require('./matching');
+const { findNearbyOrganizations } = require('../elder-rescue-backend-status/matching');
+const { updateReportStatus, getStatusHistory, ALL_STATUSES } = require('../elder-rescue-backend-status/status');
 
 const app = express();
 app.use(express.json());
@@ -92,6 +93,43 @@ app.post('/reports', upload.single('photo'), (req, res) => {
 app.get('/reports', (req, res) => {
   const all = db.prepare('SELECT * FROM reports ORDER BY created_at DESC');
   res.json(all.all());
+});
+
+// ---------------------------------------------------------------
+// PATCH /reports/:id/status — update a report's status
+// Body: { "status": "acknowledged", "note": "optional note" }
+// Enforces valid pipeline transitions: reported -> acknowledged ->
+// en_route -> rescued -> closed (closed reachable from anywhere).
+// ---------------------------------------------------------------
+app.patch('/reports/:id/status', (req, res) => {
+  const reportId = parseInt(req.params.id, 10);
+  const { status, note } = req.body;
+
+  if (Number.isNaN(reportId)) {
+    return res.status(400).json({ error: 'Invalid report id.' });
+  }
+  if (!status) {
+    return res.status(400).json({ error: `status is required. Must be one of: ${ALL_STATUSES.join(', ')}` });
+  }
+
+  const result = updateReportStatus(reportId, status, note);
+
+  if (!result.ok) {
+    // Not found -> 404, invalid transition/status -> 400
+    const code = result.error === 'Report not found.' ? 404 : 400;
+    return res.status(code).json({ error: result.error });
+  }
+
+  res.json({ message: `Report ${reportId} status updated to "${status}".`, report: result.report });
+});
+
+// GET /reports/:id/history — full status change log for a report
+app.get('/reports/:id/history', (req, res) => {
+  const reportId = parseInt(req.params.id, 10);
+  if (Number.isNaN(reportId)) {
+    return res.status(400).json({ error: 'Invalid report id.' });
+  }
+  res.json(getStatusHistory(reportId));
 });
 
 // GET /nearby-organizations?latitude=..&longitude=..
