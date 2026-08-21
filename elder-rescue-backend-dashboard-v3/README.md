@@ -7,8 +7,9 @@ submit reports and register organizations.
 - `db.js` — creates the tables: `reports`, `organizations`, `status_logs`
 - `matching.js` — finds the nearest verified organization to a report's location (Haversine distance formula)
 - `status.js` — enforces valid status transitions and logs every status change
-- `server.js` — Express API tying it all together, also serves the dashboard
-- `public/index.html` — the Response Board dashboard (single file, no build step)
+- `server.js` — Express API tying it all together, also serves the two pages below
+- `public/index.html` — the **Response Board** (NGO-facing dashboard)
+- `public/report.html` — the **public reporting page** (mobile-first, camera capture, geolocation — this is what a member of the public would actually use)
 - Uses Node's **built-in** `node:sqlite` module — no third-party database
   package, so **no compilation, no build tools (Visual Studio/Python)
   needed**. Requires Node 22.5+ (you're on 24.19.0, so you're covered).
@@ -23,19 +24,29 @@ submit reports and register organizations.
 npm install
 node server.js
 ```
-Then open **http://localhost:3000** in your browser — that's the dashboard.
+- **http://localhost:3000** — the Response Board (NGO dashboard)
+- **http://localhost:3000/report.html** — the public reporting page
+
 The database file (`elder_rescue.db`) and its tables are created
 automatically the first time you run it.
 
-## The dashboard
-Open `http://localhost:3000` in a browser. It shows:
-- Live counts of reports by status
-- A feed of every report, each with a visual progress tracker (Reported → Acknowledged → En route → Rescued), a "Close" option, and a one-click button to advance it to the next stage with an optional note
-- A "View history" toggle per report showing the full timeline of status changes
-- A sidebar to add test organizations and submit test reports directly from the browser, instead of using curl/PowerShell
-- Auto-refreshes every 6 seconds, so if you open two browser tabs you can watch one update after acting in the other (simulating a second person on the team)
+## The dashboard (`index.html`) — v3, colorful redesign
+Open `http://localhost:3000` in a browser. What changed in this version:
+- **New vibrant palette** — coral, amber, turquoise, emerald, and violet replace the muted teal/sage tones, each status now has its own bold color
+- **Drifting gradient "aurora" blobs** in the background for a livelier feel, plus a small animated heartbeat/pulse line under the header
+- **Fixed a real bug**: the file input for the photo dropzone was showing as a stray native "Choose File" box beneath the styled dropzone — the CSS rule hiding it didn't actually target the right element. That's corrected now.
+- Stat cards now have soft tinted backgrounds + an icon per status, and lift with a bouncier animation on hover
+- Buttons are now pill-shaped with a gradient fill and a soft glow on hover
+- Progress tracker dots are bigger and bouncier when advancing
+- Same underlying functionality as before: animated counters, card-update glow, toast notifications, drag-and-drop photo upload, status pipeline, org matching, history log, auto-refresh every 6s
 
-This is a functional testing/demo tool, not a finished production UI — no login, no auth, and it's meant to be used by you (or shown to others) locally for now.
+## The public reporting page (`report.html`)
+This is the screen an actual member of the public would use:
+- **Camera capture** — tapping the photo box opens the device camera directly on mobile (falls back to gallery/file picker on desktop), via `capture="environment"`
+- **Automatic geolocation** — requests the browser's location on load; shows a clear pending/success/error state, with a retry button if permission was denied
+- **Phone + description fields**, large touch targets throughout
+- On submit, shows a confirmation screen naming the matched organization (or a message that it's being followed up manually if nothing covers that area yet)
+- A short privacy note is shown up front, explaining the report is only shared with verified organizations, not made public
 
 ## How matching works
 When a report is submitted:
@@ -118,16 +129,17 @@ GET /organizations
 ```
 
 ## Verified working
-All endpoints, the matching logic, the full status pipeline, and the
-dashboard's data flow were tested end-to-end before delivery — seeded
-with realistic sample organizations and reports, moved through the
-pipeline, and confirmed the dashboard's HTML/JS is syntactically valid
-and reads the exact data shape the API returns.
+All endpoints, the matching logic, the full status pipeline, and photo
+upload were tested end-to-end before delivery — including submitting a
+report with a real image file via multipart upload, confirming the file
+saves correctly, is servable, and shows up in the report data exactly
+as both pages expect. Both pages' embedded JavaScript were also
+syntax-checked.
 
 ## Next steps (not built yet)
 1. OTP phone verification before a report can be submitted
-2. A real public-facing report screen (mobile-first, camera upload) — the dashboard's "Simulate a report" form is for testing, not the real public flow
-3. Push/SMS notifications to organizations when a new report lands near them
-4. Auto-escalation if an assigned org doesn't acknowledge in time
-5. Fallback routing (e.g. helpline number) when assigned_org_id is null
-6. Login/auth so only a real NGO can act on their own assigned reports
+2. Push/SMS notifications to organizations when a new report lands near them
+3. Auto-escalation if an assigned org doesn't acknowledge in time
+4. Fallback routing (e.g. helpline number) when assigned_org_id is null
+5. Login/auth so only a real NGO can act on their own assigned reports
+6. Deploying this somewhere public (right now it only runs on your own machine at localhost)
