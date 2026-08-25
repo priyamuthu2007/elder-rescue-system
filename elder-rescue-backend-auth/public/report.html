@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Report Someone Who Needs Help — Elder Rescue Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EEF1ED;
+    --paper: #FFFFFF;
+    --ink: #1C2620;
+    --ink-soft: #56645B;
+    --line: #D9DED6;
+    --teal: #205C56;
+    --teal-deep: #123834;
+    --amber: #C8862A;
+    --rust: #B5502E;
+    --rust-bg: #FBEAE2;
+    --sage: #4C7A5B;
+    --sage-bg: #E6F0E8;
+    --radius: 14px;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100dvh;
+  }
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 22px 18px 40px;
+    min-height: 100dvh;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--teal); margin: 0 0 8px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: 27px;
+    line-height: 1.15;
+    margin: 0 0 8px;
+    color: var(--teal-deep);
+    letter-spacing: -0.01em;
+  }
+  .lede{
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 22px;
+  }
+  .privacy-note{
+    background: var(--sage-bg);
+    border: 1px solid #CFE1D3;
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 12px;
+    color: #2E4E39;
+    line-height: 1.5;
+    margin-bottom: 22px;
+  }
+
+  fieldset{ border:none; padding:0; margin:0 0 22px; }
+  label{
+    display:block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .hint{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin-top: 2px;
+    display:block;
+  }
+
+  /* Photo capture */
+  .photo-box{
+    width:100%;
+    aspect-ratio: 4/3;
+    border: 2px dashed var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap: 8px;
+    cursor:pointer;
+    overflow:hidden;
+    position:relative;
+  }
+  .photo-box:active{ background: #F6F7F4; }
+  .photo-box svg{ width:34px; height:34px; color: var(--teal); }
+  .photo-box .cta-label{ font-size: 13.5px; font-weight:600; color: var(--teal-deep); }
+  .photo-box .cta-sub{ font-size: 11.5px; color: var(--ink-soft); }
+  .photo-box img{ width:100%; height:100%; object-fit:cover; }
+  .retake-badge{
+    position:absolute; bottom:10px; right:10px;
+    background: rgba(18,56,52,0.85); color:#fff;
+    font-size: 11px; font-weight:600; padding: 6px 11px; border-radius: 100px;
+  }
+  input[type="file"]{ display:none; }
+
+  /* Location */
+  .location-box{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 14px;
+    display:flex; align-items:center; gap: 11px;
+  }
+  .location-box svg{ width:19px; height:19px; flex-shrink:0; }
+  .location-status{ font-size: 13px; font-weight: 600; }
+  .location-sub{ font-size: 11px; color: var(--ink-soft); font-family:'IBM Plex Mono', monospace; margin-top:2px; }
+  .location-box.pending svg{ color: var(--amber); }
+  .location-box.ok svg{ color: var(--sage); }
+  .location-box.err svg{ color: var(--rust); }
+  .retry-link{
+    margin-left:auto; font-size: 12px; font-weight:600; color: var(--teal);
+    background:none; border:none; cursor:pointer; padding: 6px; text-decoration: underline;
+  }
+
+  input[type="tel"], textarea{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size: 15px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+  }
+  input[type="tel"]:focus, textarea:focus{ outline: 2px solid var(--teal); outline-offset: 1px; }
+  textarea{ resize: vertical; min-height: 88px; }
+
+  .submit-btn{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size: 15.5px;
+    font-weight: 700;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--teal);
+    color: #fff;
+    cursor:pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  .submit-btn:active{ transform: scale(0.985); }
+  .submit-btn:disabled{ background: #A7B3AB; cursor: not-allowed; }
+  .error-msg{
+    color: var(--rust);
+    font-size: 12.5px;
+    margin-top: 10px;
+    text-align:center;
+  }
+
+  /* Success screen */
+  .success-screen{ display:none; text-align:center; padding-top: 60px; }
+  .success-screen.show{ display:block; }
+  .form-screen.hide{ display:none; }
+  .success-icon{
+    width:64px; height:64px; border-radius:50%;
+    background: var(--sage-bg); color: var(--sage);
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 18px;
+  }
+  .success-icon svg{ width:30px; height:30px; }
+  .success-screen h2{
+    font-family:'Fraunces', serif; font-weight:600; font-size: 22px;
+    color: var(--teal-deep); margin: 0 0 10px;
+  }
+  .success-screen p{ font-size: 14px; color: var(--ink-soft); line-height:1.5; margin: 0 0 4px; }
+  .matched-org{
+    background: var(--paper); border:1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin: 20px 0; text-align:left;
+  }
+  .matched-org .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color: var(--ink-soft); margin-bottom:4px;}
+  .matched-org .name{ font-family:'Fraunces', serif; font-weight:600; font-size:16px; color: var(--teal-deep); }
+  .again-btn{
+    margin-top: 22px;
+    background: transparent; border: 1px solid var(--line); color: var(--ink);
+    font-weight:600; font-size: 13.5px; padding: 12px 20px; border-radius: 10px; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="form-screen" class="form-screen">
+    <p class="eyebrow">Elder Rescue Network</p>
+    <h1>Report someone who needs help</h1>
+    <p class="lede">If you've seen an elderly person alone in public who seems lost, unsupported, or in distress, let us know — we'll alert the nearest partner organization.</p>
+
+    <div class="privacy-note">Your report is only shared with verified rescue organizations, never made public. Please don't approach or move the person — just let us know where they are.</div>
+
+    <fieldset>
+      <label>Photo <span class="hint">Helps responders recognize the person. Optional, but recommended.</span></label>
+      <div class="photo-box" id="photo-box" onclick="document.getElementById('photo-input').click()">
+        <svg id="photo-icon" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="cta-label" id="photo-label">Tap to take a photo</span>
+        <span class="cta-sub">or choose from gallery</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" />
+    </fieldset>
+
+    <fieldset>
+      <label>Location</label>
+      <div class="location-box pending" id="location-box">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="flex:1;">
+          <div class="location-status" id="location-status">Detecting your location…</div>
+          <div class="location-sub" id="location-sub">This pinpoints where the person was seen</div>
+        </div>
+        <button class="retry-link" id="location-retry" style="display:none" onclick="detectLocation()">Retry</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <label>Your phone number <span class="hint">In case a responder needs to ask a quick question.</span></label>
+      <input type="tel" id="phone" placeholder="+91 XXXXX XXXXX" />
+    </fieldset>
+
+    <fieldset>
+      <label>What did you see? <span class="hint">Where exactly, and anything that helps identify them.</span></label>
+      <textarea id="description" placeholder="e.g. Elderly woman sitting alone near the bus stand on Anna Salai, appears disoriented, wearing a blue saree."></textarea>
+    </fieldset>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitReport()">Send report</button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h2>Report sent</h2>
+    <p id="success-message">Thank you — a nearby team has been notified.</p>
+    <div class="matched-org" id="matched-org-box" style="display:none;">
+      <div class="lbl">Notified</div>
+      <div class="name" id="matched-org-name"></div>
+    </div>
+    <button class="again-btn" onclick="resetForm()">Report someone else</button>
+  </div>
+
+</div>
+
+<script>
+let coords = null;
+let photoFile = null;
+
+function detectLocation(){
+  const box = document.getElementById('location-box');
+  const status = document.getElementById('location-status');
+  const sub = document.getElementById('location-sub');
+  const retry = document.getElementById('location-retry');
+  box.className = 'location-box pending';
+  status.textContent = 'Detecting your location…';
+  sub.textContent = 'This pinpoints where the person was seen';
+  retry.style.display = 'none';
+
+  if(!navigator.geolocation){
+    box.className = 'location-box err';
+    status.textContent = 'Location not supported on this device';
+    sub.textContent = 'Please enable location or try a different browser';
+    retry.style.display = 'inline';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      box.className = 'location-box ok';
+      status.textContent = 'Location detected';
+      sub.textContent = coords.lat.toFixed(5) + ', ' + coords.lng.toFixed(5);
+      retry.style.display = 'none';
+    },
+    (err) => {
+      box.className = 'location-box err';
+      status.textContent = "Couldn't detect location";
+      sub.textContent = 'Please allow location access and retry';
+      retry.style.display = 'inline';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+document.getElementById('photo-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  photoFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const box = document.getElementById('photo-box');
+    box.innerHTML = `<img src="${ev.target.result}" /><span class="retake-badge">Retake</span>`;
+  };
+  reader.readAsDataURL(file);
+});
+
+async function submitReport(){
+  const errorEl = document.getElementById('error-msg');
+  errorEl.textContent = '';
+  const phone = document.getElementById('phone').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const btn = document.getElementById('submit-btn');
+
+  if(!phone){
+    errorEl.textContent = 'Please enter your phone number.';
+    return;
+  }
+  if(!coords){
+    errorEl.textContent = "We need your location — please allow location access and try again.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try{
+    const formData = new FormData();
+    formData.append('reporter_phone', phone);
+    formData.append('description', description);
+    formData.append('latitude', coords.lat);
+    formData.append('longitude', coords.lng);
+    if(photoFile) formData.append('photo', photoFile);
+
+    const res = await fetch('/reports', { method: 'POST', body: formData });
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Something went wrong. Please try again.');
+
+    document.getElementById('form-screen').classList.add('hide');
+    document.getElementById('success-screen').classList.add('show');
+
+    if(result.matched_organization){
+      document.getElementById('success-message').textContent = 'Thank you — the nearest partner organization has been notified and will respond.';
+      document.getElementById('matched-org-box').style.display = 'block';
+      document.getElementById('matched-org-name').textContent = result.matched_organization.name;
+    } else {
+      document.getElementById('success-message').textContent = "Thank you — we've recorded your report. No partner organization currently covers this area, so our team will follow up on the next steps.";
+    }
+  }catch(e){
+    errorEl.textContent = e.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Send report';
+  }
+}
+
+function resetForm(){
+  document.getElementById('phone').value = '';
+  document.getElementById('description').value = '';
+  document.getElementById('photo-box').innerHTML = `
+    <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="cta-label">Tap to take a photo</span>
+    <span class="cta-sub">or choose from gallery</span>`;
+  photoFile = null;
+  document.getElementById('error-msg').textContent = '';
+  document.getElementById('success-screen').classList.remove('show');
+  document.getElementById('form-screen').classList.remove('hide');
+  detectLocation();
+}
+
+detectLocation();
+</script>
+</body>
+</html>
