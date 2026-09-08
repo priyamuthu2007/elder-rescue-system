@@ -25,6 +25,9 @@ function isValidTransition(currentStatus, newStatus) {
 // Updates a report's status if the transition is valid, logs the change,
 // and returns { ok: true, report } or { ok: false, error }.
 function updateReportStatus(reportId, newStatus, note) {
+  if (note !== undefined && String(note).length > 500) {
+    return { ok: false, error: 'Status note must be 500 characters or fewer.' };
+  }
   if (!ALL_STATUSES.includes(newStatus)) {
     return { ok: false, error: `Invalid status "${newStatus}". Must be one of: ${ALL_STATUSES.join(', ')}` };
   }

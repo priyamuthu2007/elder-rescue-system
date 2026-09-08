@@ -112,10 +112,11 @@ GET /nearby-organizations?latitude=13.06&longitude=80.25
 ```
 Returns all verified orgs whose coverage radius includes that point, nearest first.
 
-### List all reports (for testing)
+### List reports assigned to the signed-in organization
 ```
 GET /reports
 ```
+Requires the HTTP-only NGO session created by `POST /organizations/login`.
 
 ### Update a report's status
 ```
@@ -143,8 +144,14 @@ Content-Type: application/json
   "longitude": 80.2707,
   "coverage_radius_km": 8,
   "contact_phone": "+919999999999",
-  "verified": true
+  "password": "use-a-strong-password"
 }
+```
+New organizations are unverified. Set `ADMIN_TOKEN` in the server environment
+and verify an organization with:
+```bash
+curl -X POST http://localhost:3000/admin/organizations/1/verify \
+  -H "x-admin-token: $ADMIN_TOKEN"
 ```
 
 ### List all organizations
@@ -152,19 +159,45 @@ Content-Type: application/json
 GET /organizations
 ```
 
-## Verified working
-All endpoints, the matching logic, the full status pipeline, and photo
-upload were tested end-to-end before delivery — including submitting a
-report with a real image file via multipart upload, confirming the file
-saves correctly, is servable, and shows up in the report data exactly
-as both pages expect. Both pages' embedded JavaScript were also
-syntax-checked.
+## Security checks
+Run the automated API checks with:
+```bash
+npm test
+```
+The suite verifies protected report and photo access, admin verification,
+coordinate validation, login rate limiting, reporter OTP, fallback routing,
+and invalid uploads. Uploaded files are limited to 5 MB, checked for supported
+image signatures, resized to metadata-free JPEGs, retained for 30 days, and
+served only to their assigned organization.
 
-## Next steps (not built yet)
-1. Login session expiry and rate-limiting on failed sign-in attempts
-2. A password-reset flow for organizations
-3. OTP phone verification before a report can be submitted
-4. Push/SMS notifications to organizations when a new report lands near them
-5. Auto-escalation if an assigned org doesn't acknowledge in time
-6. Fallback routing (e.g. helpline number) when assigned_org_id is null
-7. Deploying this somewhere public (right now it only runs on your own machine at localhost)
+## Fallback and operations
+
+Unmatched reports are stored in `fallback_queue` and can be reviewed at
+`GET /admin/fallback-reports`. After administrator login at `POST /admin/login`,
+the browser can use [`admin-dashboard.html`](public/admin-dashboard.html) to
+verify organizations and manually assign reports. Reports that remain
+unacknowledged longer than `ACK_TIMEOUT_MINUTES` are also escalated into this
+queue.
+
+## Reporter verification and notifications
+
+Public reports require a phone OTP from `POST /report-verifications` followed
+by `POST /report-verifications/confirm`. Configure `OTP_WEBHOOK_URL` to deliver
+the code; `OTP_DEV_MODE=1` is for local testing only. Assignment, status-change,
+and escalation events are written to the notification outbox. Configure
+`NOTIFICATION_WEBHOOK_URL` for delivery and `PASSWORD_RESET_WEBHOOK_URL` for
+organization password recovery.
+
+## Remaining production work
+1. Generate the PostgreSQL schema from the current SQLite app with `npm run migrate:postgres` and apply it in a dedicated PostgreSQL instance before public launch.
+2. Connect and verify real SMS/notification providers.
+3. Add malware scanning and object storage for uploaded images.
+4. Configure HTTPS, secret management, backups, monitoring, and CI deployment.
+
+## PostgreSQL migration scaffold
+The repository now includes a migration generator at `migrate-to-postgres.js`. It reads the working SQLite schema and prints the PostgreSQL `CREATE TABLE` statements needed for a production deployment.
+
+```bash
+npm run migrate:postgres
+```
+This is the next concrete deployment step before the app is switched away from the local SQLite prototype.

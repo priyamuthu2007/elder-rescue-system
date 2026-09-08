@@ -147,15 +147,21 @@ function renderList(){
     return;
   }
   if(filtered.length === 0){
-    listEl.innerHTML = `<div class="empty">No match for "${q}".</div>`;
+    listEl.innerHTML = `<div class="empty">No match for "${escapeHtml(q)}".</div>`;
     return;
   }
   listEl.innerHTML = filtered.map((o,i) => `
-    <div class="org-card" style="animation-delay:${i*30}ms" onclick="signIn(${o.id}, '${o.name.replace(/'/g,"\\'")}')">
-      <div class="name">${o.name}${o.verified ? '' : '<span class="unverified-tag">Unverified</span>'}</div>
-      <div class="sub">${o.coverage_radius_km}km radius · ${o.contact_phone}</div>
+    <div class="org-card" style="animation-delay:${i*30}ms" data-name="${escapeHtml(o.name)}" onclick="signIn(${o.id}, this.dataset.name)">
+      <div class="name">${escapeHtml(o.name)}${o.verified ? '' : '<span class="unverified-tag">Unverified</span>'}</div>
+      <div class="sub">${escapeHtml(o.coverage_radius_km)}km radius · ${escapeHtml(o.contact_phone)}</div>
     </div>
   `).join('');
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[character]));
 }
 
 function signIn(id, name){

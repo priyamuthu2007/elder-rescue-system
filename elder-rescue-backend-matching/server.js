@@ -11,8 +11,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
-const { findNearbyOrganizations } = require('../elder-rescue-backend-status/matching');
-const { updateReportStatus, getStatusHistory, ALL_STATUSES } = require('../elder-rescue-backend-status/status');
+const { findNearbyOrganizations } = require('./matching');
+const { updateReportStatus, getStatusHistory, ALL_STATUSES } = require('./status');
 
 const app = express();
 app.use(express.json());

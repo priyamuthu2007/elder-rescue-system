@@ -6,6 +6,14 @@
 
 const crypto = require('crypto');
 
+function createSessionToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function hashSessionToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 // Returns a string like "salt:hash" — store this whole string.
 function hashPassword(password){
   const salt = crypto.randomBytes(16).toString('hex');
@@ -26,4 +34,4 @@ function verifyPassword(password, stored){
   return crypto.timingSafeEqual(a, b);
 }
 
-module.exports = { hashPassword, verifyPassword };
+module.exports = { hashPassword, verifyPassword, createSessionToken, hashSessionToken };

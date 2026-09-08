@@ -193,6 +193,12 @@ async function fetchJSON(url, opts){
   return data;
 }
 
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[character]));
+}
+
 function timeAgo(iso){
   const then = new Date(iso.replace(' ', 'T') + 'Z');
   const mins = Math.floor((Date.now() - then.getTime())/60000);
@@ -223,7 +229,7 @@ async function renderCard(report, index){
   if(isOpen){
     try{
       const hist = await fetchJSON(`/reports/${report.id}/history`);
-      historyHtml = `<div class="history-list open">` + (hist.length ? hist.map(h => `<div>${h.old_status} → ${h.new_status} · ${h.note ? h.note + ' · ' : ''}${h.changed_at}</div>`).join('') : '<div>No changes yet.</div>') + `</div>`;
+      historyHtml = `<div class="history-list open">` + (hist.length ? hist.map(h => `<div>${escapeHtml(h.old_status)} → ${escapeHtml(h.new_status)} · ${h.note ? escapeHtml(h.note) + ' · ' : ''}${escapeHtml(h.changed_at)}</div>`).join('') : '<div>No changes yet.</div>') + `</div>`;
     }catch(e){ historyHtml = `<div class="history-list open">Could not load history.</div>`; }
   }
 
@@ -231,15 +237,15 @@ async function renderCard(report, index){
   <div class="card status-${report.status}${justUpdated ? ' just-updated' : ''}" style="animation-delay:${Math.min(index*40,240)}ms">
     <div class="card-top">
       <div style="display:flex; gap:13px; flex:1;">
-        ${report.photo_url ? `<img src="${report.photo_url}" class="report-thumb" onclick="window.open('${report.photo_url}','_blank')" />` : ''}
-        <p class="report-desc">${report.description || '<em>No description provided</em>'}</p>
+        ${report.photo_url ? `<img src="${escapeHtml(report.photo_url)}" class="report-thumb" onclick="window.open('${escapeHtml(report.photo_url)}','_blank')" />` : ''}
+        <p class="report-desc">${report.description ? escapeHtml(report.description) : '<em>No description provided</em>'}</p>
       </div>
       <span class="pill pill-${report.status}">${report.status === 'en_route' ? '<span class="dot-live"></span>' : ''}${LABELS[report.status]}</span>
     </div>
     <div class="meta-row">
       <span>#${report.id}</span>
       <span>${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}</span>
-      <span>${report.reporter_phone}</span>
+      <span>${escapeHtml(report.reporter_phone)}</span>
       <span>${timeAgo(report.created_at)}</span>
     </div>
     ${renderTracker(report.status)}

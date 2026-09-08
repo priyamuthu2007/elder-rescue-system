@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elder Rescue Admin</title>
+<style>
+  :root { font-family: system-ui, sans-serif; color: #18232b; background: #eef3f0; }
+  body { margin: 0; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+  section { background: white; border: 1px solid #d8e3dc; border-radius: 12px; padding: 20px; margin-top: 18px; }
+  h1, h2 { margin-top: 0; }
+  label { display: block; font-weight: 600; margin: 12px 0 6px; }
+  input, select, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #b8c8be; }
+  input, select { width: 100%; max-width: 420px; }
+  button { background: #176b55; border-color: #176b55; color: white; cursor: pointer; font-weight: 700; }
+  button.secondary { background: white; color: #176b55; }
+  .row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+  .row > div { flex: 1 1 260px; }
+  .item { border-top: 1px solid #e4ece7; padding: 16px 0; }
+  .item:first-child { border-top: 0; }
+  .meta { color: #587064; font-size: 0.9rem; margin: 6px 0 12px; }
+  .error { color: #a52d2d; min-height: 1.4em; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Elder Rescue Administration</h1>
+  <section id="login-panel">
+    <h2>Administrator sign in</h2>
+    <p>Use the administrator token configured on the server.</p>
+    <label for="admin-token">Admin token</label>
+    <input id="admin-token" type="password" autocomplete="current-password">
+    <p id="login-error" class="error"></p>
+    <button onclick="login()">Sign in</button>
+  </section>
+
+  <div id="dashboard" hidden>
+    <section>
+      <div class="row"><div><h2>Fallback queue</h2><p>Unmatched or escalated reports needing manual action.</p></div><button class="secondary" onclick="loadDashboard()">Refresh</button><button class="secondary" onclick="logout()">Sign out</button></div>
+      <div id="fallback-list"></div>
+    </section>
+    <section>
+      <h2>Organizations</h2>
+      <div id="organization-list"></div>
+    </section>
+    <p id="dashboard-error" class="error"></p>
+  </div>
+</main>
+<script>
+let organizations = [];
+
+async function api(url, options) {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Request failed.');
+  return data;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>\'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
+}
+
+async function login() {
+  const error = document.getElementById('login-error');
+  try {
+    await api('/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: document.getElementById('admin-token').value }) });
+    document.getElementById('login-panel').hidden = true;
+    document.getElementById('dashboard').hidden = false;
+    await loadDashboard();
+  } catch (exception) { error.textContent = exception.message; }
+}
+
+async function logout() {
+  await api('/admin/logout', { method: 'POST' }).catch(() => {});
+  window.location.reload();
+}
+
+async function loadDashboard() {
+  const error = document.getElementById('dashboard-error');
+  try {
+    const [queue, allOrganizations] = await Promise.all([api('/admin/fallback-reports'), api('/organizations')]);
+    organizations = allOrganizations.filter(organization => organization.verified);
+    document.getElementById('fallback-list').innerHTML = queue.length ? queue.map(renderFallback).join('') : '<p>No open fallback reports.</p>';
+    document.getElementById('organization-list').innerHTML = allOrganizations.map(renderOrganization).join('') || '<p>No organizations registered.</p>';
+    error.textContent = '';
+  } catch (exception) { error.textContent = exception.message; }
+}
+
+function renderFallback(report) {
+  const options = organizations.map(organization => `<option value="${organization.id}">${escapeHtml(organization.name)}</option>`).join('');
+  return `<article class="item"><strong>Report #${report.id}</strong><div class="meta">${escapeHtml(report.fallback_reason)} · ${escapeHtml(report.reporter_phone)} · ${escapeHtml(report.created_at)}</div><div>${escapeHtml(report.description || 'No description')} </div><div class="row"><div><label for="assign-${report.id}">Assign to verified organization</label><select id="assign-${report.id}"><option value="">Choose organization</option>${options}</select></div><button onclick="assignReport(${report.id})">Assign</button></div></article>`;
+}
+
+function renderOrganization(organization) {
+  return `<article class="item"><strong>${escapeHtml(organization.name)}</strong><div class="meta">${escapeHtml(organization.contact_phone)} · ${organization.verified ? 'Verified' : 'Pending verification'}</div>${organization.verified ? '' : `<button onclick="verifyOrganization(${organization.id})">Verify organization</button>`}</article>`;
+}
+
+async function verifyOrganization(id) {
+  await api(`/admin/organizations/${id}/verify`, { method: 'POST' });
+  await loadDashboard();
+}
+
+async function assignReport(id) {
+  const organizationId = document.getElementById(`assign-${id}`).value;
+  if (!organizationId) return;
+  await api(`/admin/reports/${id}/assign`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ organization_id: organizationId }) });
+  await loadDashboard();
+}
+</script>
+</body>
+</html>
